@@ -10,7 +10,11 @@ namespace app\includes\models\site\shortcodes;
 use \app\includes\models\site\TPFlightShortcodeModel;
 
 class TPInOurCityFlyShortcodeModel extends TPFlightShortcodeModel{
-
+    /**
+     * @param array $args
+     * @return array|bool|mixed|string
+     * @var $NUMBER 14
+     */
     public function get_data($args = array())
     {
         // TODO: Implement get_data() method.
@@ -35,7 +39,7 @@ class TPInOurCityFlyShortcodeModel extends TPFlightShortcodeModel{
         if($this->cacheSecund()  && $return_url == false){
             if(TPOPlUGIN_ERROR_LOG)
                 error_log("{$method} cache");
-            if ( false === ($rows = get_transient($this->cacheKey('14'.$one_way.$currency, $destination)))) {
+            if ( false === ($rows = get_transient($this->cacheKey('14'.$one_way.$currency, $destination, $widget)))) {
                 if(TPOPlUGIN_ERROR_LOG)
                     error_log("{$method} cache false");
                 $return = self::$TPRequestApi->get_latest($attr);
@@ -57,7 +61,7 @@ class TPInOurCityFlyShortcodeModel extends TPFlightShortcodeModel{
                 if(TPOPlUGIN_ERROR_LOG)
                     error_log("{$method} cache secund = ".$cacheSecund);
 
-                set_transient( $this->cacheKey('14'.$one_way.$currency, $destination) , $rows, $cacheSecund);
+                set_transient( $this->cacheKey('14'.$one_way.$currency, $destination, $widget) , $rows, $cacheSecund);
             }
         }else{
             $return = self::$TPRequestApi->get_latest($attr);
@@ -96,7 +100,9 @@ class TPInOurCityFlyShortcodeModel extends TPFlightShortcodeModel{
             'paginate' => true,
             'off_title' => '',
             'subid' => '',
-            'return_url' => false
+            'return_url' => false,
+            'widget' => 0,
+            'host' => ''
         );
         extract(wp_parse_args($args, $defaults), EXTR_SKIP);
         if ($return_url == 1){
@@ -109,7 +115,8 @@ class TPInOurCityFlyShortcodeModel extends TPFlightShortcodeModel{
             'trip_class' => $trip_class,
             'limit' => $limit,
             'one_way' => $one_way,
-            'return_url' => $return_url
+            'return_url' => $return_url,
+            'widget' => $widget
         ));
         //if( ! $rows )
          //   return false;
@@ -127,7 +134,8 @@ class TPInOurCityFlyShortcodeModel extends TPFlightShortcodeModel{
             'off_title' => $off_title,
             'subid' => $subid,
             'currency' => $currency,
-            'return_url' => $return_url
+            'return_url' => $return_url,
+            'host' => $host
         );
 
 

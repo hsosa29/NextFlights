@@ -6,6 +6,8 @@
  * Time: 15:17
  */
 namespace app\includes\models\admin;
+use app\includes\common\TPUpdateOptions;
+
 abstract class TPOptionModel extends \core\models\TPOOptionModel{
     private static $instance;
     private static $result;
@@ -37,6 +39,9 @@ abstract class TPOptionModel extends \core\models\TPOOptionModel{
             \app\includes\TPPlugin::deleteCacheAll();
 
         }
-        return self::$result;
+
+        $result = TPUpdateOptions::sanitizeSettings(self::$result);
+
+        return $result;
     }
 }

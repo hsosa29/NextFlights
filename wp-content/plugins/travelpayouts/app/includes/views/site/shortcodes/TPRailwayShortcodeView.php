@@ -13,6 +13,7 @@ use app\includes\common\TPFieldsLabelTable;
 use app\includes\common\TPLang;
 use app\includes\common\TPOption;
 use app\includes\TPPlugin;
+use \app\includes\common\TpPluginHelper;
 
 class TPRailwayShortcodeView {
 
@@ -40,7 +41,8 @@ class TPRailwayShortcodeView {
 		extract( wp_parse_args( $args, $defaults ), EXTR_SKIP );
 		$html = '';
 		if ($shortcode == false) return false;
-		if (count($rows) < 1 || $rows == false) return $this->renderViewIfEmptyTable();
+
+        if (!is_array($rows) || TpPluginHelper::count($rows) < 1) return $this->renderViewIfEmptyTable();
 
 		$html .= '<div class="TPTrainTable">
                      <div class="TP-Plugin-Tables_wrapper clearfix TP-HotelsTableWrapper">'
@@ -62,6 +64,7 @@ class TPRailwayShortcodeView {
 	}
 
 	public function renderViewIfEmptyTable(){
+		//error_log('renderViewIfEmptyTable');
 		return '';
 	}
 
@@ -259,6 +262,7 @@ class TPRailwayShortcodeView {
 
 
 	public function renderBodyTable($shortcode, $origin, $destination, $rows, $subid, $language, $currency){
+
 		$subid = $this->getSubid($subid);
 		$bodyTable = '';
 		$bodyTable .= '<tbody>';
@@ -330,7 +334,7 @@ class TPRailwayShortcodeView {
                     case 'dates':
                         $bodyTable .= '<td data-th="'.$this->getTableTheadTDFieldLabel($selected_field).'"
                                 class="TP'.$selected_field.'Td '.$this->tdClassHidden($shortcode, $selected_field).'">'
-                                .$this->getDates($row, $shortcode, $subid)
+                                .$this->getDates($row, $shortcode, $subid, $origin, $destination)
                             .'</td>';
                         break;
                     //Откуда / From
@@ -639,7 +643,7 @@ class TPRailwayShortcodeView {
 	    if (array_key_exists('categories', $row)) {
 		    $categories = $row['categories'];
 	    }
-	    if (count($categories) < 1 || $categories == false) return $prices;
+	    if (TpPluginHelper::count($categories) < 1 || $categories == false) return $prices;
         $priceData = array();
 		foreach ($categories as $category){
 			$type = '';
@@ -662,7 +666,7 @@ class TPRailwayShortcodeView {
 			           .'</div>';
 		}
 		$priceMin = 0;
-        if (count($priceData) > 0){
+        if (TpPluginHelper::count($priceData) > 0){
             $priceMin = min($priceData);
         }
     	return '<p class="TP-tdContent" data-price="'.$priceMin.'">'.$prices.'</p>';
@@ -677,11 +681,11 @@ class TPRailwayShortcodeView {
         if (array_key_exists('categories', $row)) {
             $categories = $row['categories'];
         }
-        if (count($categories)  == 1) {
+        if (TpPluginHelper::count($categories)  == 1) {
             $tdPriceClass = 'TPTd_1';
-        } elseif (count($categories)  == 2) {
+        } elseif (TpPluginHelper::count($categories)  == 2) {
             $tdPriceClass = 'TPTd_2';
-        } elseif (count($categories)  == 3) {
+        } elseif (TpPluginHelper::count($categories)  == 3) {
             $tdPriceClass = 'TPTd_3';
         }
 
@@ -723,7 +727,7 @@ class TPRailwayShortcodeView {
 	 *
 	 * @return string
 	 */
-	public function getDates($row = array(), $typeShortcode, $subid){
+	public function getDates($row = array(), $typeShortcode, $subid, $origin, $destination){
 		$dates = '';
 		$btnTxt = "";
 		if (isset(TPPlugin::$options['shortcodes_railway'][$typeShortcode]['title_button'][TPLang::getLang()])){
@@ -733,12 +737,17 @@ class TPRailwayShortcodeView {
 		}
 
         $targetURL = 0;
+        $target = '';
         if (isset(TPPlugin::$options['config']['target_url'])) {
             $targetURL = 1;
+            $target = ' target="_blank" ';
         }
 
-		$dates = '<a class="TP-Plugin-Tables_link TPButtonTable TPButtonTableDates" '
+		/*$dates = '<a href="#" class="TP-Plugin-Tables_link TPButtonTable TPButtonTableDates" '
             .' data-href="'.$this->getURL($row, $subid).'" data-target="'.$targetURL.'">'
+            .$btnTxt.'</a>';*/
+        $dates = '<a href="'.$this->getURL($row, $subid, $origin, $destination).'" class="TP-Plugin-Tables_link TPButtonTable" '
+            .' '.$target.'>'
             .$btnTxt.'</a>';
 		return '<p class="TP-tdContent">'.$dates.'</p>';
 	}
@@ -747,7 +756,7 @@ class TPRailwayShortcodeView {
      * @param array $row
      * @return string
      */
-	public function getURL($row = array(), $subid){
+	public function getURL($row = array(), $subid, $origin, $destination){
         $URL = '';
         $marker = '';
         $promo_id = '';
@@ -761,6 +770,8 @@ class TPRailwayShortcodeView {
         $numberForUrl = '';
         $from = '';
         $date = '';
+        $nnst1 = '';
+        $nnst2 = '';
         $URL = 'https://c45.travelpayouts.com/click';
         $marker = TPPlugin::$options['account']['marker'];
         $marker = '?shmarker='.$marker;
@@ -771,20 +782,25 @@ class TPRailwayShortcodeView {
         $promo_id = '&promo_id=1294';
         $source_type = '&source_type=customlink';
         $type = '&type=click';
-        $custom_url = '&custom_url='.urlencode('https://www.tutu.ru/poezda/order/');
-        $departureStation = '?dep_st=';
-        if (array_key_exists('departureStationCode', $row)) {
+        $custom_url = '&custom_url='.urlencode('https://www.tutu.ru/poezda/rasp_d.php');
+        $nnst1 = '?nnst1='.$origin;
+        $nnst2 = '&nnst2='.$destination;
+        //$custom_url = '&custom_url='.urlencode('https://www.tutu.ru/poezda/order/');
+        //$departureStation = '?dep_st=' .$origin;
+        /*if (array_key_exists('departureStationCode', $row)) {
             $departureStation .= $row['departureStationCode'];
-        }
-        $arrivalStation = '&arr_st=';
-        if (array_key_exists('arrivalStationCode', $row)) {
+        }*/
+        //$arrivalStation = '&arr_st='.$destination;
+        /*if (array_key_exists('arrivalStationCode', $row)) {
             $arrivalStation .= $row['arrivalStationCode'];
-        }
-        $numberForUrl = '&tn=';
+        }*/
+
+        /*$numberForUrl = '&tn=';
         if (array_key_exists('numberForUrl', $row)) {
             $numberForUrl .= $row['numberForUrl'];
         }
-        $from = '&from=calendar';
+        $from = '&from=calendar';*/
+
         /*$runDepartureStation = '&departure_st=';
         if (array_key_exists('runDepartureStationCode', $row)) {
             $runDepartureStation .= $row['runDepartureStationCode'];
@@ -793,10 +809,13 @@ class TPRailwayShortcodeView {
         if (array_key_exists('runArrivalStationCode', $row)) {
             $runArrivalStation .= $row['runArrivalStationCode'];
         }*/
-        $date = '&date=';
 
-        $URL .= $marker.$promo_id.$source_type.$type.$custom_url.urlencode($departureStation.$arrivalStation
-                .$numberForUrl.$from.$runDepartureStation.$runArrivalStation.$date);
+        //$date = '&date=';
+
+        /*$URL .= $marker.$promo_id.$source_type.$type.$custom_url.urlencode($departureStation.$arrivalStation
+                .$numberForUrl.$from.$runDepartureStation.$runArrivalStation.$date);*/
+
+        $URL .= $marker.$promo_id.$source_type.$type.$custom_url.urlencode($nnst1.$nnst2);
         return $URL;
     }
 

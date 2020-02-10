@@ -7,10 +7,17 @@
  * 8. Популярные направления из города
  */
 namespace app\includes\models\site\shortcodes;
+
 use app\includes\common\TPCurrencyUtils;
 use \app\includes\models\site\TPFlightShortcodeModel;
-class TPPopularRoutesFromCityShortcodeModel extends TPFlightShortcodeModel{
+use \app\includes\common\TpPluginHelper;
 
+class TPPopularRoutesFromCityShortcodeModel extends TPFlightShortcodeModel{
+    /**
+     * @param array $args
+     * @return array|bool
+     * @var $NUMBER 9
+     */
     public function get_data($args = array())
     {
         // TODO: Implement get_data() method.
@@ -27,7 +34,9 @@ class TPPopularRoutesFromCityShortcodeModel extends TPFlightShortcodeModel{
             'subid' => '',
             'filter_flight_number' => false,
             'filter_airline' => false,
-            'return_url' => false
+            'return_url' => false,
+            'widget' => 0,
+            'host' => ''
         );
         extract(wp_parse_args($args, $defaults), EXTR_SKIP);
         if ($return_url == 1){
@@ -51,7 +60,7 @@ class TPPopularRoutesFromCityShortcodeModel extends TPFlightShortcodeModel{
             if(TPOPlUGIN_ERROR_LOG)
                 error_log("{$method} cache");
             if (false === ($return = get_transient($this->cacheKey('9',
-                    $origin)))) {
+                    $origin, $widget)))) {
                 if(TPOPlUGIN_ERROR_LOG)
                     error_log("{$method} cache false");
                 $return = self::$TPRequestApi->get_popular_routes_from_city($attr);
@@ -69,7 +78,7 @@ class TPPopularRoutesFromCityShortcodeModel extends TPFlightShortcodeModel{
                 if(TPOPlUGIN_ERROR_LOG)
                     error_log("{$method} cache secund = ".$cacheSecund);
                 set_transient($this->cacheKey('9',
-                    $origin), $return, $cacheSecund);
+                    $origin, $widget), $return, $cacheSecund);
             }
         } else {
             $return = self::$TPRequestApi->get_popular_routes_from_city($attr);
@@ -96,7 +105,8 @@ class TPPopularRoutesFromCityShortcodeModel extends TPFlightShortcodeModel{
             'off_title' => $off_title,
             'subid' => $subid,
             'currency' => $this->typeCurrency(),
-            'return_url' => $return_url
+            'return_url' => $return_url,
+            'host' => $host
         );
 
     }
@@ -113,7 +123,7 @@ class TPPopularRoutesFromCityShortcodeModel extends TPFlightShortcodeModel{
                 return (strpos($value['airline_iata'], $filter_airline) !== false);
             });
         }
-        if(count($data) < 1) return $dataAll;
+        if(TpPluginHelper::count($data) < 1) return $dataAll;
 
         return $data;
     }

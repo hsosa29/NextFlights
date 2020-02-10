@@ -7,7 +7,7 @@
  */
 
 namespace app\includes\controllers\site\widgets;
-
+use app\includes\common\TPCurrencyUtils;
 
 class TPDucklettWidgetController extends \app\includes\controllers\site\TPWigetsShortcodesController
 {
@@ -30,8 +30,9 @@ class TPDucklettWidgetController extends \app\includes\controllers\site\TPWigets
             'origin' => false,
             'destination' => false,
             'airline' => false,
-            'currency' => 'USD' ,
-            'subid' => ''
+            'currency' => \app\includes\TPPlugin::$options['local']['currency'], //TPCurrencyUtils::TP_CURRENCY_USD,
+            'subid' => '',
+            //'powered_by' => (isset(\app\includes\TPPlugin::$options['widgets'][$widgets]['powered_by']))? "true" : "false"
         );
         extract( wp_parse_args( $data, $defaults ), EXTR_SKIP );
         $url_params = '';
@@ -64,15 +65,23 @@ class TPDucklettWidgetController extends \app\includes\controllers\site\TPWigets
        // error_log($url);
         $white_label = $this->view->getWhiteLabel($widgets);
         //$this->view->TypeCurrency()
-        $currency = '';
-        $currency = $this->view->getCurrency($widgets, $white_label);
+        //$currency = '';
+        //$currency = $this->view->getCurrency($widgets, $white_label);
         //error_log($currency);
         //error_log($white_label);
+
+        if (!empty($powered_by)) {
+            $powered_by = '&powered_by='.$powered_by;
+        } else {
+            $powered_by = '';
+        }
+
         $output = '';
         $output = '<script data-cfasync="false" async src="'.$url.'?widget_type='.$type
             .'&currency='.mb_strtolower($currency).'&host='.$white_label.'&marker='
-            .$this->view->getMarker($widgets, $subid).'.'.$url_params.'" charset="UTF-8" data-wpfc-render="false">
+            .$this->view->getMarker($widgets, $subid).'.'.$url_params.$powered_by.'" charset="UTF-8" data-wpfc-render="false">
         </script>';
+
         return $output;
     }
 }

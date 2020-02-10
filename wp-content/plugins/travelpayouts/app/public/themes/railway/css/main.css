@@ -513,7 +513,7 @@ span.ellipsis {
 
 .TPTrainTable .TP-Plugin-Tables_box tbody tr td .TP-Plugin-Tables_link {
   border-bottom: 1px solid #ce6408 !important;
-  background: #FEB20E !important;
+  background: #FEB20E;
   color: #FFFFFF !important;
   font-weight: bold !important;
   font-style: normal !important;
@@ -538,7 +538,7 @@ span.ellipsis {
     display: flex;
     align-items: center;
     justify-content: space-around;
-    height: 15px;
+    /*height: 15px;*/
 }
 
 .departure_time {
@@ -556,7 +556,7 @@ span.ellipsis {
 
 .TP-train-text_right {
     text-align: right;
-    display: block;
+    display: inline-block;
     float: right;
     width: 60px;
 }
@@ -570,6 +570,16 @@ span.ellipsis {
     display: inline-block;
     text-align: left;
     width: 40px;
+}
+
+@media (max-width: 1390px) {
+  .TP-train-text_left {
+    width: 30px;
+    
+  }
+  .TP-train-text_right {
+    white-space: nowrap;
+  }
 }
 
 /* data picker */
@@ -600,7 +610,7 @@ span.ellipsis {
 .calendar.left, .calendar.right {
   float: left;
 }
-+
+
 .marshrut {
     min-width: 146px;
     display: inline-block;
@@ -611,7 +621,7 @@ span.ellipsis {
     padding: 0;
 }
 
-abbr, tla, acronym{
+abbr, acronym{
 	text-decoration: none !important;
 }
 
@@ -640,6 +650,58 @@ abbr, tla, acronym{
 	display: block;
   }
 }
+@media (max-width: 1340px) {
+  .entry-content {
+    padding-left: 5%;
+    padding-right: 5%;
+  }
+}
+
+@media (max-width: 1280px) {
+  .entry-content {
+    padding-left: 3%;
+    padding-right: 3%;
+  }
+}
+
+@media (max-width: 1240px) {
+  .entry-content {
+    padding-left: 3%;
+    padding-right: 3%;
+  }
+  .TPTrainTable .TP-Plugin-Tables_box thead tr td {
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+  .TPTrainTable .TP-Plugin-Tables_box thead tr td, 
+  .TPTrainTable .TP-Plugin-Tables_box tbody tr td, 
+  .TPTrainTable .TP-Plugin-Tables_box tbody tr td a span, 
+  .TPTrainTable .TP-Plugin-Tables_box tbody tr td p {
+    font-size: 11px !important;
+  }
+  .TPTrainTable .TP-Plugin-Tables_box tbody tr td .TP-Plugin-Tables_link {
+    min-width: auto;
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+  .departure_time,
+  .comming_time {
+    font-size: 12px;
+  }
+}
+@media (max-width: 1060px) {
+  .TP-Plugin-Tables_box_thead {
+    -ms-word-break: break-word;
+    word-break: break-word;
+  }
+} 
+@media (max-width: 768px) {
+ 
+  .dataTables_wrapper {
+    overflow-x: auto;
+  }
+}
+
 
 @media (max-width: 480px) {
   .TPpriceTd {
@@ -667,12 +729,13 @@ abbr, tla, acronym{
   .TPTrainTable .TP-Plugin-Tables_box tbody tr td.TPbuttonTd {
     background-color: #fff !important;
   }
+  .TP-Plugin-Tables_box tbody tr td p.data-price {
+    padding-top: 4px;
+    display: inline-block;
+  }
   .TP-tdContent {
     position: absolute;
-    top: 26%;
-  }
-  .TP-AirlineLogo {
-    top: 0 !important;
+    top: 23%;
   }
   .TPPopUpButtonTable {
     display: none !important;
@@ -697,9 +760,7 @@ abbr, tla, acronym{
     top: 2px;
     margin-right: 2px;
   }
-  .TP-rwd-table tbody tr td:first-of-type {
-    background-color: #f2f2f2;
-  }
+ 
   .TP-rwd-table tbody tr td {
     text-align: left;
     overflow: hidden;
@@ -709,7 +770,10 @@ abbr, tla, acronym{
     max-height: 35px;
     vertical-align: middle;
     display: inline-block;
-    width: auto;
+    width: 50%;
+  }
+  .TP-AirlineLogo {
+    top: 23% !important;
   }
   .TPTrainTable .TP-Plugin-Tables_box tbody tr td p {
     vertical-align: middle;
@@ -787,7 +851,8 @@ abbr, tla, acronym{
     padding-right: 10px;
   }
   .marshrut {
-    display: none;
+  	display: block;
+    white-space: normal;
   }
   .TPtrainTd span{
   	display: block;
@@ -836,6 +901,14 @@ abbr, tla, acronym{
   }
   td.TPdepartureTd:before {
     content: attr(data-th) ": ";
+  }
+  .TPHotelTable .TP-rwd-table tbody tr td:last-child .TP-tdContent .TP-Plugin-Tables_link {
+    top: 0 !important;
+  }
+  .TPHotelTable .TP-rwd-table tbody tr td:last-child .TP-tdContent {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
   }
 }
 

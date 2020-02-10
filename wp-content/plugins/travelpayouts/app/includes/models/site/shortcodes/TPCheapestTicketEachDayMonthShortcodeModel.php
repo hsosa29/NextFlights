@@ -8,10 +8,16 @@
  *  4. Самые дешевые билеты по направлению в этом месяце
  */
 namespace app\includes\models\site\shortcodes;
+
 use \app\includes\models\site\TPFlightShortcodeModel;
+use \app\includes\common\TpPluginHelper;
 
 class TPCheapestTicketEachDayMonthShortcodeModel extends TPFlightShortcodeModel{
-
+    /**
+     * @param array $args
+     * @return array|bool|mixed
+     * @var $NUMBER 5
+     */
     public function get_data($args = array())
     {
         // TODO: Implement get_data() method.
@@ -34,7 +40,7 @@ class TPCheapestTicketEachDayMonthShortcodeModel extends TPFlightShortcodeModel{
             if(TPOPlUGIN_ERROR_LOG)
                 error_log("{$method} cache");
             if (false === ($rows = get_transient($this->cacheKey('5'.$currency,
-                    $origin.$destination)))) {
+                    $origin.$destination, $widget)))) {
                 if(TPOPlUGIN_ERROR_LOG)
                     error_log("{$method} cache -> false");
                 $return = (array) self::$TPRequestApi->get_calendar($attr);
@@ -58,7 +64,7 @@ class TPCheapestTicketEachDayMonthShortcodeModel extends TPFlightShortcodeModel{
                     error_log("{$method} cache secund = ".$cacheSecund);
 
                 set_transient( $this->cacheKey('5'.$currency,
-                    $origin.$destination) , $rows, $cacheSecund);
+                    $origin.$destination, $widget) , $rows, $cacheSecund);
             }
         }else{
             $return = (array) self::$TPRequestApi->get_calendar($attr);
@@ -92,7 +98,9 @@ class TPCheapestTicketEachDayMonthShortcodeModel extends TPFlightShortcodeModel{
             'subid' => '',
             'filter_flight_number' => false,
             'filter_airline' => false,
-            'return_url' => false
+            'return_url' => false,
+            'widget' => 0,
+            'host' => ''
             );
         extract( wp_parse_args( $args, $defaults ), EXTR_SKIP );
 
@@ -104,7 +112,8 @@ class TPCheapestTicketEachDayMonthShortcodeModel extends TPFlightShortcodeModel{
             'origin' => $origin,
             'destination' => $destination,
             'currency' => $currency,
-            'return_url' => $return_url
+            'return_url' => $return_url,
+            'widget' => $widget
         ));
         //if( ! $rows )
         //    return false;
@@ -128,7 +137,8 @@ class TPCheapestTicketEachDayMonthShortcodeModel extends TPFlightShortcodeModel{
             'off_title' => $off_title,
             'subid' => $subid,
             'currency' => $currency,
-            'return_url' => $return_url
+            'return_url' => $return_url,
+            'host' => $host
             );
 
 
@@ -147,7 +157,7 @@ class TPCheapestTicketEachDayMonthShortcodeModel extends TPFlightShortcodeModel{
                 return (strpos($value['airline_iata'], $filter_airline) !== false);
             });
         }
-        if(count($data) < 1) return $dataAll;
+        if(TpPluginHelper::count($data) < 1) return $dataAll;
         return $data;
     }
     public function getMaxPrice($args = array())

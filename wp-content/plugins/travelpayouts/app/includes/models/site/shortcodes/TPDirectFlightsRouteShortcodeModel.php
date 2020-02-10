@@ -6,9 +6,16 @@
  * Time: 11:21
  */
 namespace app\includes\models\site\shortcodes;
-use \app\includes\models\site\TPFlightShortcodeModel;
-class TPDirectFlightsRouteShortcodeModel extends TPFlightShortcodeModel{
 
+use \app\includes\models\site\TPFlightShortcodeModel;
+use \app\includes\common\TpPluginHelper;
+
+class TPDirectFlightsRouteShortcodeModel extends TPFlightShortcodeModel{
+    /**
+     * @param array $args
+     * @return array|bool|mixed
+     * @var $NUMBER 7
+     */
     public function get_data($args = array())
     {
         // TODO: Implement get_data() method.
@@ -60,7 +67,7 @@ class TPDirectFlightsRouteShortcodeModel extends TPFlightShortcodeModel{
             if(TPOPlUGIN_ERROR_LOG)
                 error_log("{$method} cache");
             if (false === ($return = get_transient($this->cacheKey('7'.$currency,
-                    $origin.$destination)))) {
+                    $origin.$destination, $widget)))) {
                 if(TPOPlUGIN_ERROR_LOG)
                     error_log("{$method} cache false");
                 if(TPOPlUGIN_ERROR_LOG)
@@ -109,7 +116,7 @@ class TPDirectFlightsRouteShortcodeModel extends TPFlightShortcodeModel{
                     error_log("{$method} cache secund = ".$cacheSecund);
 
                 set_transient( $this->cacheKey('7'.$currency,
-                    $origin.$destination) , $return, $cacheSecund);
+                    $origin.$destination, $widget) , $return, $cacheSecund);
             }
         }else{
             $return = array();
@@ -208,7 +215,9 @@ class TPDirectFlightsRouteShortcodeModel extends TPFlightShortcodeModel{
             'subid' => '',
             'filter_flight_number' => false,
             'filter_airline' => false,
-            'return_url' => false
+            'return_url' => false,
+            'widget' => 0,
+            'host' => ''
         );
         extract( wp_parse_args( $args, $defaults ), EXTR_SKIP );
         if ($return_url == 1){
@@ -218,7 +227,8 @@ class TPDirectFlightsRouteShortcodeModel extends TPFlightShortcodeModel{
             'origin' => $origin,
             'destination' => $destination,
             'currency' => $currency,
-            'return_url' => $return_url
+            'return_url' => $return_url,
+            'widget' => $widget
         ));
         //error_log(print_r($return, true));
         //if( ! $return )
@@ -238,7 +248,8 @@ class TPDirectFlightsRouteShortcodeModel extends TPFlightShortcodeModel{
             'off_title' => $off_title,
             'subid' => $subid,
             'currency' => $currency,
-            'return_url' => $return_url
+            'return_url' => $return_url,
+            'host' => $host
         );
 
 
@@ -257,7 +268,7 @@ class TPDirectFlightsRouteShortcodeModel extends TPFlightShortcodeModel{
                 return (strpos($value['airline_iata'], $filter_airline) !== false);
             });
         }
-        if(count($data) < 1) return $dataAll;
+        if(TpPluginHelper::count($data) < 1) return $dataAll;
         return $data;
     }
 

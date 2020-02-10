@@ -9,7 +9,11 @@
 namespace app\includes\models\site\shortcodes;
 use \app\includes\models\site\TPFlightShortcodeModel;
 class TPPriceCalendarWeekShortcodeModel extends TPFlightShortcodeModel{
-
+    /**
+     * @param array $args
+     * @return array|bool|mixed|string
+     * @var $NUMBER 2
+     */
     public function get_data($args = array())
     {
         // TODO: Implement get_data() method.
@@ -31,7 +35,7 @@ class TPPriceCalendarWeekShortcodeModel extends TPFlightShortcodeModel{
             if(TPOPlUGIN_ERROR_LOG)
                 error_log("{$method} cache");
             if (false === ($return = get_transient($this->cacheKey('2'.$currency,
-                    $origin.$destination)))) {
+                    $origin.$destination, $widget)))) {
                 if(TPOPlUGIN_ERROR_LOG)
                     error_log("{$method} cache false");
                 $return = $this->sort_dates(self::$TPRequestApi->get_price_week_calendar($attr));
@@ -51,7 +55,7 @@ class TPPriceCalendarWeekShortcodeModel extends TPFlightShortcodeModel{
                     error_log("{$method} cache secund = ".$cacheSecund);
 
                 set_transient( $this->cacheKey('2'.$currency,
-                    $origin.$destination) , $return, $cacheSecund);
+                    $origin.$destination, $widget) , $return, $cacheSecund);
             }
         }else{
             $return = self::$TPRequestApi->get_price_week_calendar($attr);
@@ -84,7 +88,9 @@ class TPPriceCalendarWeekShortcodeModel extends TPFlightShortcodeModel{
             'paginate' => true,
             'off_title' => '',
             'subid' => '',
-            'return_url' => false
+            'return_url' => false,
+            'widget' => 0,
+            'host' => ''
             );
         extract( wp_parse_args( $args, $defaults ), EXTR_SKIP );
         if ($return_url == 1){
@@ -94,7 +100,8 @@ class TPPriceCalendarWeekShortcodeModel extends TPFlightShortcodeModel{
             'origin' => $origin,
             'destination' => $destination,
             'currency' => $currency,
-            'return_url' => $return_url
+            'return_url' => $return_url,
+            'widget' => $widget
         ));
         //if( ! $return )
         //    return false;
@@ -110,7 +117,8 @@ class TPPriceCalendarWeekShortcodeModel extends TPFlightShortcodeModel{
             'off_title' => $off_title,
             'subid' => $subid,
             'currency' => $currency,
-            'return_url' => $return_url
+            'return_url' => $return_url,
+            'host' => $host
         );
 
 

@@ -8,7 +8,11 @@
 namespace app\includes\models\site\shortcodes;
 use \app\includes\models\site\TPFlightShortcodeModel;
 class TPPopularDestinationsAirlinesShortcodeModel extends TPFlightShortcodeModel{
-
+    /**
+     * @param array $args
+     * @return array|bool
+     * @var $NUMBER 10
+     */
     public function get_data($args = array())
     {
         // TODO: Implement get_data() method.
@@ -19,7 +23,9 @@ class TPPopularDestinationsAirlinesShortcodeModel extends TPFlightShortcodeModel
             'paginate' => true,
             'off_title' => '',
             'subid' => '',
-            'return_url' => false
+            'return_url' => false,
+            'widget' => 0,
+            'host' => ''
         );
         extract( wp_parse_args( $args, $defaults ), EXTR_SKIP );
         if ($return_url == 1){
@@ -42,7 +48,7 @@ class TPPopularDestinationsAirlinesShortcodeModel extends TPFlightShortcodeModel
             if(TPOPlUGIN_ERROR_LOG)
                 error_log("{$method} cache");
             if (false === ($return = get_transient($this->cacheKey('10',
-                    $airline)))) {
+                    $airline, $widget)))) {
                 if(TPOPlUGIN_ERROR_LOG)
                     error_log("{$method} cache false");
                 $return = self::$TPRequestApi->get_popular($attr);
@@ -63,7 +69,7 @@ class TPPopularDestinationsAirlinesShortcodeModel extends TPFlightShortcodeModel
                     error_log("{$method} cache secund = ".$cacheSecund);
 
                 set_transient( $this->cacheKey('10',
-                    $airline) , $return, $cacheSecund);
+                    $airline, $widget) , $return, $cacheSecund);
             }
         }else{
             $return = self::$TPRequestApi->get_popular($attr);
@@ -85,7 +91,8 @@ class TPPopularDestinationsAirlinesShortcodeModel extends TPFlightShortcodeModel
             'paginate' => $paginate,
             'off_title' => $off_title,
             'subid' => $subid,
-            'return_url' => $return_url
+            'return_url' => $return_url,
+            'host' => $host
         );
     }
 }

@@ -117,7 +117,6 @@
 
 .TPHotelTable .TP-Plugin-Tables_box tbody tr:hover {
   box-sizing: border-box;
-  cursor: pointer
 }
 
 .TPHotelTable .TP-Plugin-Tables_box tbody tr td {
@@ -605,9 +604,6 @@
     position: absolute;
     top: 32%;
     color: #dedddd;
-  }
-  .TPHotelTable .TP-AirlineLogo {
-    top: 0 !important;
   }
   .TPHotelTable .TPPopUpButtonTable {
     display: none !important;

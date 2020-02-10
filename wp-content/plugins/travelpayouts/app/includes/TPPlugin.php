@@ -1,9 +1,13 @@
 <?php
 
 namespace app\includes;
-use app\includes\common\TPCurrencyUtils;
 
-class TPPlugin extends \core\TPOPlugin implements \core\TPOPluginInterface{
+use app\includes\common\TPCurrencyUtils;
+use app\includes\common\TPUpdateOptions;
+use app\includes\common\TpStatistics;
+
+class TPPlugin extends \core\TPOPlugin implements \core\TPOPluginInterface
+{
 
     private static $instance = null;
 
@@ -12,71 +16,114 @@ class TPPlugin extends \core\TPOPlugin implements \core\TPOPluginInterface{
      */
     public static function getInstance()
     {
-        if (null === self::$instance)
-        {
+        if (null === self::$instance) {
             self::$instance = new self();
         }
         return self::$instance;
     }
 
-    protected function __construct() {
-        $method = __CLASS__." -> ". __METHOD__." -> ".__LINE__;
-        if(TPOPlUGIN_ERROR_LOG)
-            error_log($method." -> Start");
+    protected function __construct()
+    {
+        $method = __CLASS__ . " -> " . __METHOD__ . " -> " . __LINE__;
+        if (TPOPlUGIN_ERROR_LOG)
+            error_log($method . " -> Start");
         parent::__construct();
         new TPLoader();
         //self::check_plugin_update();
-        if(TPOPlUGIN_ERROR_LOG)
-            error_log($method." -> End");
-        add_action('plugins_loaded', array(&$this, 'setDefaultOptions'), 100);
-        add_action('plugins_loaded', array(&$this, 'checkPluginUpdate'), 100);
+        if (TPOPlUGIN_ERROR_LOG)
+            error_log($method . " -> End");
+
+        add_action('plugins_loaded', [&$this, 'setDefaultOptions'], 100);
+        add_action('plugins_loaded', [&$this, 'checkPluginUpdate'], 100);
+        add_action('upgrader_process_complete', [&$this, 'upgraderProcessComplete'], 10, 2);
+        if (!get_option(TPOPlUGIN_OPTION_STATISTICS_KEEN)) {
+            TpStatistics::write();
+        }
+
+        $this->updatePluginAction();
     }
 
-    public function setDefaultOptions(){
-        if(TPOPlUGIN_ERROR_LOG)
+    /**
+     * @param $upgrader_object
+     * @param $options
+     */
+    public function upgraderProcessComplete($upgrader_object, $options)
+    {
+        if ($options['action'] == 'update' && $options['type'] == 'plugin') {
+            foreach ($options['plugins'] as $each_plugin) {
+                if ($each_plugin == TPOPlUGIN_BASENAME) {
+                    delete_option(TPOPlUGIN_OPTION_STATISTICS_KEEN);
+
+                    update_option(TPOPlUGIN_SLUG . '_version_on_update', TPOPlUGIN_VERSION);
+                }
+            }
+        }
+    }
+
+    /**
+     * TPOPlUGIN_SLUG _version_on_update option хранит значение старой версии до обновления
+     * version_compare сравнивает версии например с текущей
+     * если отличаются можно выполнить код и перезаписать версию на текущую что бы код не выполнялся повторно
+     */
+    private function updatePluginAction()
+    {
+        if (get_option(TPOPlUGIN_SLUG . '_update_options_safe_flag', '0') == '0') {
+            TPUpdateOptions::updateOptionsSafe(self::$options);
+            update_option(TPOPlUGIN_SLUG . '_update_options_safe_flag', '1');
+        }
+    }
+
+    public function setDefaultOptions()
+    {
+        if (TPOPlUGIN_ERROR_LOG)
             error_log("setDefaultOptions");
-        if( ! get_option(TPOPlUGIN_OPTION_NAME) )
-            update_option( TPOPlUGIN_OPTION_NAME, TPDefault::defaultOptions() );
-        if( ! get_option(TPOPlUGIN_OPTION_VERSION) )
+        if (!get_option(TPOPlUGIN_OPTION_NAME))
+            update_option(TPOPlUGIN_OPTION_NAME, TPDefault::defaultOptions());
+        if (!get_option(TPOPlUGIN_OPTION_VERSION))
             update_option(TPOPlUGIN_OPTION_VERSION, TPOPlUGIN_VERSION);
     }
-    public function checkPluginUpdate() {
-        if(TPOPlUGIN_ERROR_LOG)
+
+    /**
+     *
+     */
+    public function checkPluginUpdate()
+    {
+        if (TPOPlUGIN_ERROR_LOG)
             error_log("checkPluginUpdate");
         if (!is_plugin_active('travelpayouts/travelpayouts.php')) return;
-        if( ! get_option(TPOPlUGIN_OPTION_VERSION) || get_option(TPOPlUGIN_OPTION_VERSION) != TPOPlUGIN_VERSION) {
-	        self::deleteCacheAll();
-        	if( ! get_option(TPOPlUGIN_OPTION_NAME) ){
-                update_option( TPOPlUGIN_OPTION_NAME, TPDefault::defaultOptions() );
-            } else{
+        if (!get_option(TPOPlUGIN_OPTION_VERSION) || get_option(TPOPlUGIN_OPTION_VERSION) != TPOPlUGIN_VERSION) {
+            self::deleteCacheAll();
+            if (!get_option(TPOPlUGIN_OPTION_NAME)) {
+                update_option(TPOPlUGIN_OPTION_NAME, TPDefault::defaultOptions());
+            } else {
                 //$settings = array_replace_recursive(self::$options, TPDefault::defaultOptions());
                 $settings = array_replace_recursive(TPDefault::defaultOptions(), get_option(TPOPlUGIN_OPTION_NAME));
-                update_option( TPOPlUGIN_OPTION_NAME, $settings);
+                update_option(TPOPlUGIN_OPTION_NAME, $settings);
             }
             if (version_compare(get_option(TPOPlUGIN_OPTION_VERSION), '0.5.2', '<')) {
-                if(TPOPlUGIN_ERROR_LOG)
-                    error_log("currency default version = ".get_option(TPOPlUGIN_OPTION_VERSION) );
+                if (TPOPlUGIN_ERROR_LOG)
+                    error_log("currency default version = " . get_option(TPOPlUGIN_OPTION_VERSION));
                 $options = get_option(TPOPlUGIN_OPTION_NAME);
                 $options['local']['currency'] = TPCurrencyUtils::getDefaultCurrency();
-                update_option( TPOPlUGIN_OPTION_NAME,  $options);
+                update_option(TPOPlUGIN_OPTION_NAME, $options);
             }
 
             if (version_compare(get_option(TPOPlUGIN_OPTION_VERSION), '0.7.0', '<')) {
                 $options = get_option(TPOPlUGIN_OPTION_NAME);
-                $options['config']['cache_value'] = array(
+                $options['config']['cache_value'] = [
                     'hotel' => 24,
                     'flight' => 3
-                );
-                update_option( TPOPlUGIN_OPTION_NAME,  $options);
+                ];
+                update_option(TPOPlUGIN_OPTION_NAME, $options);
             }
 
-            if(!empty(self::$options['account']['marker'])){
+            if (!empty(self::$options['account']['marker'])) {
                 $request = 'http://metrics.aviasales.ru/?goal=tp_wp_plugin_activation&data={"merker":'
-                    .self::$options['account']['marker'].',"domain":"'.preg_replace("(^https?://)", "", get_option('home')).'"}';
+                    . self::$options['account']['marker'] . ',"domain":"' . preg_replace("(^https?://)", "", get_option('home')) . '"}';
                 $string = htmlspecialchars($request);
-                $response = wp_remote_get( $string, array('headers' => array(
+                $response = wp_remote_get($string, ['headers' => [
                     'Accept-Encoding' => 'gzip, deflate',
-                )) );
+                ]]);
 
             }
             update_option(TPOPlUGIN_OPTION_VERSION, TPOPlUGIN_VERSION);
@@ -87,13 +134,17 @@ class TPPlugin extends \core\TPOPlugin implements \core\TPOPluginInterface{
         models\site\shortcodes\hotels\TPHotelListModel::createTable();
 
     }
+
+    /**
+     *
+     */
     static public function activation()
     {
         // TODO: Implement activation() method.
         if (!version_compare(PHP_VERSION, '5.3.0', '>=')) {
             global $locale;
             $error_msg = '';
-            switch($locale) {
+            switch ($locale) {
                 case "ru_RU":
                     $error_msg = '<p>К сожалению, плагин Travelpayouts не работает с версиями PHP ниже чем 5.3.х.
                 Ознакомьтесь с информацией о том, <a href="https://support.travelpayouts.com/hc/ru/articles/207794617#02?utm_source=wpplugin&utm_medium=php_error&utm_campaign=ru">
@@ -112,7 +163,7 @@ class TPPlugin extends \core\TPOPlugin implements \core\TPOPluginInterface{
             }
             deactivate_plugins(TPOPlUGIN_NAME);
             wp_die($error_msg);
-        }else{
+        } else {
             models\admin\menu\TPSearchFormsModel::createTable();
             models\admin\menu\TPAutoReplacLinksModel::createTable();
             //models\site\shortcodes\TPSpecialOfferShortcodeModel::createTable();
@@ -130,7 +181,8 @@ class TPPlugin extends \core\TPOPlugin implements \core\TPOPluginInterface{
         //models\site\shortcodes\TPSpecialOfferShortcodeModel::deleteTable();
         self::deleteCacheAll();
         //delete_option( TPOPlUGIN_OPTION_NAME);
-        delete_option( TPOPlUGIN_OPTION_VERSION);
+        delete_option(TPOPlUGIN_OPTION_VERSION);
+        delete_option(TPOPlUGIN_OPTION_STATISTICS_KEEN);
         //delete_option( TPOPlUGIN_TABLE_SF_VERSION);
         //delete_option( TPOPlUGIN_TABLE_ARL_VERSION);
         //delete_option( TPOPlUGIN_TABLE_SPECIAL_OFFER_VERSION);
@@ -144,15 +196,17 @@ class TPPlugin extends \core\TPOPlugin implements \core\TPOPluginInterface{
         models\admin\menu\TPAutoReplacLinksModel::deleteTable();
         models\site\shortcodes\TPSpecialOfferShortcodeModel::deleteTable();
         models\site\shortcodes\hotels\TPHotelListModel::deleteTable();
-        delete_option( TPOPlUGIN_OPTION_NAME);
-        delete_option( TPOPlUGIN_OPTION_VERSION);
-        delete_option( TPOPlUGIN_TABLE_SF_VERSION);
-        delete_option( TPOPlUGIN_TABLE_HOTEL_LIST_VERSION);
-        delete_option( TPOPlUGIN_TABLE_ARL_VERSION);
-        delete_option( TPOPlUGIN_TABLE_SPECIAL_OFFER_VERSION);
-        delete_option( TPOPlUGIN_TABLE_SPECIAL_ROUTE_VERSION);
+        delete_option(TPOPlUGIN_OPTION_NAME);
+        delete_option(TPOPlUGIN_OPTION_VERSION);
+        delete_option(TPOPlUGIN_TABLE_SF_VERSION);
+        delete_option(TPOPlUGIN_TABLE_HOTEL_LIST_VERSION);
+        delete_option(TPOPlUGIN_TABLE_ARL_VERSION);
+        delete_option(TPOPlUGIN_TABLE_SPECIAL_OFFER_VERSION);
+        delete_option(TPOPlUGIN_TABLE_SPECIAL_ROUTE_VERSION);
+        delete_option(TPOPlUGIN_OPTION_STATISTICS_KEEN);
     }
 
 }
+
 $TPPlugin = TPPlugin::getInstance();//new TPPlugin();
 

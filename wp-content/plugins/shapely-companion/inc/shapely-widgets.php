@@ -22,6 +22,8 @@ function shapely_companion_widgets_init() {
 		'recent-posts',
 		'social',
 		'video',
+		'page-content',
+		'page-title',
 	);
 
 	foreach ( $widgets as $widget ) {
@@ -37,9 +39,15 @@ function shapely_companion_widgets_init() {
 	register_widget( 'Shapely_Video' );
 	register_widget( 'Shapely_Home_Contact' );
 	register_widget( 'Shapely_Social' );
+	register_widget( 'Shapely_Page_Title' );
+	register_widget( 'Shapely_Page_Content' );
 
-	if ( defined( 'JETPACK__VERSION' ) ) {
-		register_widget( 'Shapely_Home_Testimonials' );
-		register_widget( 'Shapely_Home_Portfolio' );
+	if ( class_exists( 'Jetpack' ) && Jetpack::is_module_active( 'custom-content-types' ) ) {
+		if ( get_option( 'jetpack_portfolio' ) ) {
+			register_widget( 'Shapely_Home_Portfolio' );
+		}
+		if ( get_option( 'jetpack_testimonial' ) ) {
+			register_widget( 'Shapely_Home_Testimonials' );
+		}
 	}
 }

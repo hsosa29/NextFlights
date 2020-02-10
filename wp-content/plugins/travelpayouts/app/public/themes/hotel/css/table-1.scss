@@ -122,7 +122,6 @@
     background: rgba(241, 214, 0, .1);
   }
   box-sizing: border-box;
-  cursor: pointer;
   border: 0;
 }
 
@@ -588,9 +587,6 @@ span.ellipsis {
   .TP-tdContent {
     position: absolute;
     top: 32%;
-  }
-  .TP-AirlineLogo {
-    top: 0 !important;
   }
   .TPPopUpButtonTable {
     display: none !important;

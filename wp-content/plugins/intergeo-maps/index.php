@@ -1,10 +1,10 @@
 <?php
 /**
  *
- * Plugin Name: Intergeo - Google Maps Plugin - Lite
+ * Plugin Name: Intergeo - Google Maps Plugin
  * Plugin URI: http://themeisle.com/plugins/intergeo-maps-lite/
  * Description: A simple, easy and quite powerful Google Map tool to create, manage and embed custom Google Maps into your WordPress posts and pages. The plugin allows you to deeply customize look and feel of a map, add overlays like markers, rectangles, circles, polylines and polygons to your map. It could even be integraded with your Google Adsense account and show ad on your maps.
- * Version: 2.2.0
+ * Version: 2.3.2
  * Author: Themeisle
  * Author URI: http://themeisle.com
  * License: GPL v2.0 or later
@@ -16,7 +16,8 @@
  */
 
 define( 'INTERGEO_PLUGIN_NAME', 'intergeo' );
-define( 'INTERGEO_VERSION', '2.2.0' );
+define( 'TI_INTERGEO_PLUGIN_NAME', 'intergeo_maps' );
+define( 'INTERGEO_VERSION', '2.3.2' );
 define( 'INTERGEO_ABSPATH', dirname( __FILE__ ) );
 define( 'INTERGEO_ABSURL', plugins_url( '/', __FILE__ ) );
 defined( 'WPLANG' ) || define( 'WPLANG', '' );
@@ -56,7 +57,7 @@ function intergeo_action_links( $links, $file ) {
 		array_unshift(
 			$links,
 			sprintf( '<a href="%s">%s</a>', add_query_arg( 'page', INTERGEO_PLUGIN_NAME, admin_url( 'upload.php' ) ), __( 'Maps', 'intergeo-maps' ) ),
-			sprintf( '<a href="%s">%s</a>', admin_url( 'options-media.php' ), __( 'Settings', 'intergeo-maps' ) )
+			sprintf( '<a href="%s">%s</a>', intergeo_settings_url(), __( 'Settings', 'intergeo-maps' ) )
 		);
 	}
 
@@ -106,7 +107,6 @@ function intergeo_settings() {
     <h2>
 		<div id="intergeo_lbrr_ttl">Inter<span style="color:#4067dc">g</span><span style="color:#e21b31">e</span><span style="color:#fcaa08">o</span>' . __( 'Maps Settings', 'intergeo-maps' ) . '</div> ';
 	echo '<a   href="' . admin_url( 'upload.php?page=' . INTERGEO_PLUGIN_NAME ) . '" class="add-new-h2">' . __( 'Create New Map', 'intergeo-maps' ) . '</a>';
-	echo '<a  target="_blank" href="' . INTERGEO_PRO_URL . '" class="intergeo-pro-btn add-new-h2">' . __( 'Buy PRO version to add more maps', 'intergeo-maps' ) . '</a>';
 
 	echo '<a id="intergeo_lbrr_settings" href="' . admin_url( 'upload.php?page=' . INTERGEO_PLUGIN_NAME ) . '" class="add-new-h2">' . __( 'View Existing Maps', 'intergeo-maps' ) . '</a>
 	</h2>';
@@ -308,7 +308,7 @@ function intergeo_map_popup_init() {
 		} else {
 			$args = array(
 				'page'    => INTERGEO_PLUGIN_NAME,
-				'updated' => date( 'YmdHis' ),
+				'updated' => current_time( 'mysql' ),
 			);
 			wp_redirect( add_query_arg( $args, admin_url( 'upload.php' ) ) );
 			exit;
@@ -336,9 +336,11 @@ function intergeo_map_popup_init() {
 				'marker' => __( 'marker', 'intergeo-maps' ),
 				'error'  => array(
 					'style'      => __( 'Styles are broken. Please, fix it and try again.', 'intergeo-maps' ),
-					'directions' => __( 'Direction was not found.', 'intergeo-maps' ),
+					'directions' => __( 'Directions were not found. Error: ', 'intergeo-maps' ),
+					'shortcode' => __( 'Unable to render shortcode properly. Error: ', 'intergeo-maps' ),
 				),
 			),
+			'show_error'    => is_user_logged_in() ? 1 : 0,
 		)
 	);
 	wp_enqueue_style( 'wp-color-picker' );
@@ -543,6 +545,16 @@ function intergeo_filter_overlays_marker( $marker ) {
 		'title'    => isset( $marker['title'] ) ? strip_tags( trim( $marker['title'] ) ) : '',
 		'loc'      => isset( $marker['loc'] ) ? strip_tags( trim( $marker['loc'] ) ) : '',
 	);
+}
+
+
+/**
+ * Returns the settings URL.
+ *
+ * @return string The settings URL.
+ */
+function intergeo_settings_url() {
+	return admin_url( 'options-general.php?page=' . INTERGEO_PLUGIN_NAME );
 }
 
 /**
@@ -1221,6 +1233,15 @@ function intergeo_library() {
 	if ( filter_input( INPUT_GET, 'do' ) == 'delete' ) {
 		intergeo_library_delete();
 	}
+
+	if ( filter_input( INPUT_GET, 'do' ) == 'dismiss-notice' && current_user_can( 'manage_options' ) ) {
+		if ( wp_verify_nonce( filter_input( INPUT_GET, 'nonce' ), 'dismiss-notice' . filter_input( INPUT_SERVER, 'REMOTE_ADDR', FILTER_VALIDATE_IP ) ) ) {
+			update_option( 'intergeo_maps_otter_notice', true );
+			wp_redirect( add_query_arg( 'page', INTERGEO_PLUGIN_NAME, admin_url( 'upload.php' ) ) );
+			exit;
+		}
+	}
+
 	$query      = new WP_Query(
 		array(
 			'orderby'        => 'ID',
@@ -1343,6 +1364,14 @@ function intergeo_print_messages() {
 }
 
 /**
+ * Add options.
+ */
+function intergeo_register_settings() {
+	add_option( 'intergeo_maps_otter_notice', false );
+}
+add_action( 'admin_init', 'intergeo_register_settings' );
+
+/**
  * Show message.
  *
  * @param   string $message Message.
@@ -1455,4 +1484,22 @@ $intergeo_subscribe = new THEMEISLE_SUBSCRIBE( INTERGEO_PLUGIN_NAME );
 $vendor_file        = INTERGEO_ABSPATH . '/vendor/autoload.php';
 if ( is_readable( $vendor_file ) ) {
 	include_once( $vendor_file );
+}
+
+add_filter( 'pirate_parrot_log', 'intergeo_register_parrot', 10, 1 );
+/**
+ * Register with parrot.
+ */
+function intergeo_register_parrot( $plugins ) {
+	$plugins[] = INTERGEO_PLUGIN_NAME;
+	return $plugins;
+}
+
+
+add_filter( TI_INTERGEO_PLUGIN_NAME . '_enqueue_recommend', 'intergeo_upsell_plugins', 10, 2 );
+/**
+ * Validates the correct screen on which the assets for upsell should be loaded.
+ */
+function intergeo_upsell_plugins( $return, $screen_id ) {
+	return $screen_id === 'media_page_intergeo';
 }

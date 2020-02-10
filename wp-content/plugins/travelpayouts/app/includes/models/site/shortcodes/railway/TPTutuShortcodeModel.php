@@ -13,6 +13,7 @@ use app\includes\models\site\TPRailwayShortcodeModel;
 use \app\includes\common\TPCurrencyUtils;
 use \app\includes\common\TPLang;
 use app\includes\TPPlugin;
+use \app\includes\common\TpPluginHelper;
 
 class TPTutuShortcodeModel extends TPRailwayShortcodeModel {
 
@@ -39,7 +40,7 @@ class TPTutuShortcodeModel extends TPRailwayShortcodeModel {
 		$cacheKey = "railway_1_tutu_{$origin}_{$destination}_{$shortcode}";
 
 		if($this->cacheSecund() && $return_url == false){
-			if ( false === ($rows = get_transient($this->cacheKey($cacheKey)))) {
+			if ( false === ($rows = get_transient($this->cacheKey($cacheKey, '', $widget)))) {
 				$return = self::$TPRequestApi->getTutu($attr);
 				$rows = array();
 				$cacheSecund = 0;
@@ -52,7 +53,7 @@ class TPTutuShortcodeModel extends TPRailwayShortcodeModel {
 					$rows = $this->setStation($rows);
 					$cacheSecund = $this->cacheSecund();
 				}
-				set_transient( $this->cacheKey($cacheKey) , $rows, $cacheSecund);
+				set_transient( $this->cacheKey($cacheKey, '', $widget) , $rows, $cacheSecund);
 			}
 
 		} else {
@@ -72,6 +73,8 @@ class TPTutuShortcodeModel extends TPRailwayShortcodeModel {
 	}
 
 	public function setStation($rows){
+        if (!is_array($rows) || TpPluginHelper::count($rows) < 1) return array();
+
 		foreach ($rows as $key => $row){
 			if (array_key_exists('departureStation', $row)) {
                 $row['departureStationCode'] = $row['departureStation'];
@@ -112,7 +115,8 @@ class TPTutuShortcodeModel extends TPRailwayShortcodeModel {
 			'subid' => '',
 			'currency' => TPCurrencyUtils::getDefaultCurrency(),
 			'return_url' => false,
-			'language' => TPLang::getLang()
+			'language' => TPLang::getLang(),
+            'widget' => 0
 		);
 		extract( wp_parse_args( $args, $defaults ), EXTR_SKIP );
 		if ($return_url == 1){
@@ -125,6 +129,7 @@ class TPTutuShortcodeModel extends TPRailwayShortcodeModel {
 			'return_url' => $return_url,
 			'language' => $language,
 			'shortcode' => 1,
+            'widget' => $widget
 		));
 		$originTitle = '';
 		$destinationTitle = '';

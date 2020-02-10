@@ -42,6 +42,19 @@ class TPHostURL
                 8 => 'jetradar.com/new_searches/'
             )
         ),
+        'aviasales.kz' => array(
+            'table' => 'aviasales.kz',
+            'widget' => array(
+                1 => '',
+                2 => '',
+                3 => 'www.aviasales.kz/search/',
+                4 => '',
+                5 => '',
+                6 => 'www.aviasales.kz/search/',
+                7 => '',
+                8 => ''
+            )
+        ),
         'jetradar.com.br' => array(
             'table' => 'jetradar.com.br',
             'widget' => array(
@@ -508,6 +521,7 @@ class TPHostURL
      */
     public static function getHostWidgetWhenEmptyWhiteLabel($widgetType){
         $host = "";
+        $hostTable = self::getHostTable();
         $hostData = array(
             1 => array(
                 TPLang::getLangRU() => 'http://map.aviasales.ru',
@@ -543,9 +557,14 @@ class TPHostURL
             ),
         );
 
+
+        if ($widgetType === 8 && preg_match('/aviasales.kz$/', $hostTable))
+            return 'aviasales.kz';
+
+
         if (!array_key_exists($widgetType, $hostData)) return $host;
 
-        if (!array_key_exists(\app\includes\common\TPLang::getLang(), $hostData[$widgetType])){
+        if (!array_key_exists(\app\includes\common\TPLang::getLang(), $hostData[$widgetType])) {
             $host = $hostData[$widgetType][\app\includes\common\TPLang::getDefaultLang()];
         } else {
             $host = $hostData[$widgetType][\app\includes\common\TPLang::getLang()];

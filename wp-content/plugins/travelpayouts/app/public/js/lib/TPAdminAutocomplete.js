@@ -5,7 +5,7 @@
 function TPCityAutocomplete(){
     var catHotelSelec = {
         "ru":{
-            tophotels: "Популярные",
+            tophotels: "Топ отели",
             price: "Дешёвые",
             distance: "Близко к центру",
             rating: "Рейтинг",
@@ -30,7 +30,7 @@ function TPCityAutocomplete(){
             popularity: "Популярные"
         },
         "en":{
-            tophotels: "Popular",
+            tophotels: "Top hotels",
             price: "Cheap",
             distance: "Close to city center",
             rating: "Rating",
@@ -188,6 +188,7 @@ function TPCityAutocomplete(){
      */
     this.TPHotelAutocompleteInit = function(selector, AppendTo){
         if (typeof(AppendTo)==='undefined') AppendTo = null;
+        var self = this;
         jQuery(function($) {
             var doc, win;
             doc = $(document);
@@ -277,7 +278,7 @@ function TPCityAutocomplete(){
                                         }
                                     })
                                 )
-                            } else if($(selector).hasClass('TPAutocompleteID')){
+                            } else if($(selector).hasClass('TPAutocompleteID') || $(selector).hasClass('TPAutocompleteIDWidget')){
                                 response(
                                     $.map(data.cities, function(item){
                                         // console.log(item)
@@ -289,7 +290,8 @@ function TPCityAutocomplete(){
 
                                     })
                                 )
-                            } else if($(selector).hasClass('HotelCityAutocomplete')) {
+                            } else if($(selector).hasClass('HotelCityAutocomplete') ||
+                                $(selector).hasClass('HotelWidgetCityAutocomplete')) {
                                 var records =[];
 
                                 $.map(data.cities, function(city, key_city){
@@ -435,6 +437,10 @@ function TPCityAutocomplete(){
 
                             })
                         }
+                        if ($(selector).hasClass('TPAutocompleteIDWidget')){
+                            //Hotels Selections Widget
+                            self.TPGetHotelsWidgetCat(ui.item.val, $(selector))
+                        }
                         if($(selector).hasClass('HotelCityAutocomplete')){
                             //console.log(ui.item);
                             //console.log( $(selector));
@@ -449,6 +455,35 @@ function TPCityAutocomplete(){
                                 $.map(data, function(item){
                                     if (typeof hotelsSelectionsType[tpLocale][item] != "undefined"){
                                         $('#select_hotels_selections_type')
+                                            .append($("<option></option>")
+                                                .attr("value",item)
+                                                .attr("data-selections-title", hotelsSelectionsType[tpLocale][item]['title'])
+                                                .attr("data-selections-title-ru",hotelsSelectionsType['ru'][item]['title'])
+                                                .attr("data-selections-title-en",hotelsSelectionsType['en'][item]['title'])
+                                                .text(hotelsSelectionsType[tpLocale][item]['label']));
+                                    }
+
+                                });
+
+
+                            })
+                        }
+                        if($(selector).hasClass('HotelWidgetCityAutocomplete')){
+                            var widget, selectionsType, selectionsTypeSelect;
+                            widget = $(this).parent('label').parent('p').parent('.tp-hotels-tables-widget');
+                            selectionsType = widget.find('.tp-hotels-tables-widget-selections-type');
+                            selectionsTypeSelect = widget.find('.tp-hotels-tables-widget-selections-type-select');
+
+                            selectionsType.children('.tp-hotels-tables-widget-selections-type-city-label').val(ui.item.city);
+
+                            input.attr('data-city', ui.item.city);
+                            selectionsTypeSelect.find("option:gt(0)").remove();
+
+                            $.get("https://yasen.hotellook.com/tp/v1/available_selections.json?id=" + ui.item.val, function(data) {
+                                data.sort();
+                                $.map(data, function(item){
+                                    if (typeof hotelsSelectionsType[tpLocale][item] != "undefined"){
+                                        selectionsTypeSelect
                                             .append($("<option></option>")
                                                 .attr("value",item)
                                                 .attr("data-selections-title", hotelsSelectionsType[tpLocale][item]['title'])
@@ -669,7 +704,6 @@ function TPCityAutocomplete(){
             });
         });
     }
-
     /**
      * Railway
      * @param selector
@@ -723,7 +757,104 @@ function TPCityAutocomplete(){
             });
         });
     }
+    /**
+     * Hotels Selections Widget
+     * @param city
+     * @param selector
+     * @constructor
+     */
+    this.TPGetHotelsWidgetCat = function (city, selector) {
+        jQuery(function ($) {
+            var doc, win, widget, cats, cat1, cat2, cat3, cat1Val, cat2Val, cat3Val;
+            doc = $(document);
+            win = $(window);
+            widget = selector.parent('label').parent('p').parent('.tp-widgets-widget');
+            cats = widget.children('.tp-widgets-widget-cat');
+            cat1 = cats.children('.tp-widgets-widget-cat-1').children('select');
+            cat2 = cats.children('.tp-widgets-widget-cat-2').children('select');
+            cat3 = cats.children('.tp-widgets-widget-cat-3').children('select');
+            cat1Val = cat1.data('select_cat');
+            cat2Val = cat2.data('select_cat');
+            cat3Val = cat3.data('select_cat');
+            $.get("https://yasen.hotellook.com/tp/v1/available_selections.json?id=" + city, function(data) {
+                var select_option = '';
+                data.sort();
+                switch (tpLocale){
+                    case "ru":
+                        select_option += '<option value="">Выберите подборку</option>';
+                        break;
+                    case "en":
+                        select_option += '<option value="">Select selection</option>';
+                        break;
+                }
+                $.map(data, function(item){
+                    if (typeof catHotelSelec[tpLocale][item] != "undefined"){
+                        select_option += '<option value="'+item+'">'
+                            +catHotelSelec[tpLocale][item]+'</option>';
+                    }
+                })
+                cat1.find("option").remove();
+                cat2.find("option").remove();
+                cat3.find("option").remove();
+                cat1.append(select_option);
+                cat2.append(select_option);
+                cat3.append(select_option);
+                cats.show();
+                if(cat1Val != '0' && cat1Val != ''){
+                    cat1.find('option[value='+cat1Val+']')
+                        .attr('selected','selected')
+                }
+                if(cat2Val != '0'  && cat2Val != ''){
+                    cat2.find('option[value='+cat2Val+']')
+                        .attr('selected','selected')
+                }
+                if(cat3Val != '0' && cat3Val != ''){
+                    cat1.find('option[value='+cat3Val+']')
+                        .attr('selected','selected')
+                }
 
+
+            })
+        })
+    }
+    /**
+     *
+     * @param city
+     * @param selectionsType
+     * @param selectionsTypeVal
+     * @constructor
+     */
+    this.TPGetHotelsSelections = function(city, selectionsType, selectionsTypeVal){
+        jQuery(function($) {
+            var doc, win;
+            doc = $(document);
+            win = $(window);
+
+            selectionsType.find("option:gt(0)").remove();
+            console.log("https://yasen.hotellook.com/tp/v1/available_selections.json?id=" + city)
+            $.get("https://yasen.hotellook.com/tp/v1/available_selections.json?id=" + city, function(data) {
+                data.sort();
+                $.map(data, function(item){
+                    //console.log(item)
+                    if (typeof hotelsSelectionsType[tpLocale][item] != "undefined"){
+                        var selected = '';
+                        if (selectionsTypeVal == item){
+                            selected = 'selected="selected"';
+                        }
+                        selectionsType
+                            .append($("<option "+selected+"></option>")
+                                .attr("value",item)
+                                .attr("data-selections-title", hotelsSelectionsType[tpLocale][item]['title'])
+                                .attr("data-selections-title-ru",hotelsSelectionsType['ru'][item]['title'])
+                                .attr("data-selections-title-en",hotelsSelectionsType['en'][item]['title'])
+                                .text(hotelsSelectionsType[tpLocale][item]['label']));
+                    }
+                });
+                //
+            })
+        });
+
+    }
     /**
      *
      * @param selector

@@ -7,10 +7,17 @@
  * 5. Цены на билеты по месяцам
  */
 namespace app\includes\models\site\shortcodes;
+
 use \app\includes\models\site\TPFlightShortcodeModel;
+use \app\includes\common\TpPluginHelper;
 
 class TPCheapestTicketsEachMonthShortcodeModel extends TPFlightShortcodeModel{
 
+    /**
+     * @param array $args
+     * @return array|bool|mixed|string
+     * @var $NUMBER 6
+     */
     public function get_data($args = array())
     {
         // TODO: Implement get_data() method.
@@ -32,7 +39,7 @@ class TPCheapestTicketsEachMonthShortcodeModel extends TPFlightShortcodeModel{
             if(TPOPlUGIN_ERROR_LOG)
                 error_log("{$method} cache");
             if (false === ($return = get_transient($this->cacheKey('6'.$currency,
-                    $origin.$destination)))) {
+                    $origin.$destination, $widget)))) {
                 if(TPOPlUGIN_ERROR_LOG)
                     error_log("{$method} cache -> false");
                 $return = $this->iataAutocomplete((array) self::$TPRequestApi->get_cheapest_tickets_each_month($attr), 6);
@@ -48,7 +55,7 @@ class TPCheapestTicketsEachMonthShortcodeModel extends TPFlightShortcodeModel{
                 if(TPOPlUGIN_ERROR_LOG)
                     error_log("{$method} cache secund = ".$cacheSecund);
                 set_transient( $this->cacheKey('6'.$currency,
-                    $origin.$destination) , $return, $this->cacheSecund());
+                    $origin.$destination, $widget) , $return, $this->cacheSecund());
             }
         }else{
 
@@ -83,7 +90,9 @@ class TPCheapestTicketsEachMonthShortcodeModel extends TPFlightShortcodeModel{
             'subid' => '',
             'filter_flight_number' => false,
             'filter_airline' => false,
-            'return_url' => false
+            'return_url' => false,
+            'widget' => 0,
+            'host' => ''
         );
         extract( wp_parse_args( $args, $defaults ), EXTR_SKIP );
 
@@ -95,7 +104,8 @@ class TPCheapestTicketsEachMonthShortcodeModel extends TPFlightShortcodeModel{
             'origin' => $origin,
             'destination' => $destination,
             'currency' => $currency,
-            'return_url' => $return_url
+            'return_url' => $return_url,
+            'widget' => $widget
         ));
 
 
@@ -120,7 +130,8 @@ class TPCheapestTicketsEachMonthShortcodeModel extends TPFlightShortcodeModel{
             'off_title' => $off_title,
             'subid' => $subid,
             'currency' => $currency,
-            'return_url' => $return_url
+            'return_url' => $return_url,
+            'host' => $host
         );
 
 
@@ -140,7 +151,7 @@ class TPCheapestTicketsEachMonthShortcodeModel extends TPFlightShortcodeModel{
                 return (strpos($value['airline_iata'], $filter_airline) !== false);
             });
         }
-        if(count($data) < 1) return $dataAll;
+        if(TpPluginHelper::count($data) < 1) return $dataAll;
         return $data;
     }
 

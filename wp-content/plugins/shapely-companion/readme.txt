@@ -1,13 +1,15 @@
 === Plugin Name ===
 Contributors: colorlibplugins, silkalns
 Tags: woocommerce, widgets, plugin, demo, companion, home page, one page, parallax, social, portfolio, projects
-Requires at least: 3.8
-Tested up to: 4.8
-Stable tag: 1.0.6
+Requires at least: 4.6
+Tested up to: 5.1
+Requires PHP: 5.6
+Stable tag: 1.2.4
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
 Shapely Companion is a companion plugin for Shapely WordPress theme by Colorlib.com.
+
 == Description ==
 
 Shapely Companion is a companion for Shapely One Page WordPress theme by Colorlib.com. This plugin won't do anything for other free or premium WordPress themes and you need to download and install <a href="https://colorlib.com/wp/themes/shapely/" target="_blank">Shapely</a>. If you are having problems with Shapely theme or its companion plugin the fastest way to receive help is via our theme <a href="https://colorlib.com/wp/forums" target="_blank">support forum</a>.
@@ -51,6 +53,24 @@ Currently it works only with Shapely theme.
 You can still use Shapely theme without this plugin but you won't be able to import demo content and use theme specific widgets that you see on front page of theme demo.
 
 == Changelog ==
+
+= 1.2.4 =
+
+* Implemented milestone https://github.com/puikinsh/shapely/milestone/8?closed=1
+
+= 1.2.2 =
+
+* Implemented milestone https://github.com/puikinsh/shapely/milestone/6?closed=1
+* Updated player.js Vimeo library
+* Improved checks for JetPack exists
+
+= 1.2.1 =
+
+* Implemented milestone https://github.com/puikinsh/shapely/milestone/5
+
+= 1.2.0 =
+
+* Implemented milestone https://github.com/puikinsh/shapely/milestone/4
 
 = 1.0.6 =
 * Added Vimeo for Video Widget

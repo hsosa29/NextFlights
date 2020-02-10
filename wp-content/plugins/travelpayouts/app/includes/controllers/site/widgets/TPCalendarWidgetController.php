@@ -6,6 +6,8 @@
  * Time: 13:27
  */
 namespace app\includes\controllers\site\widgets;
+use app\includes\common\TPCurrencyUtils;
+
 class TPCalendarWidgetController  extends \app\includes\controllers\site\TPWigetsShortcodesController{
 
     public function initShortcode()
@@ -37,15 +39,25 @@ class TPCalendarWidgetController  extends \app\includes\controllers\site\TPWiget
             'subid' => '',
             'period_day_from' => \app\includes\TPPlugin::$options['widgets'][$widgets]['period_day']['from'],
             'period_day_to' => \app\includes\TPPlugin::$options['widgets'][$widgets]['period_day']['to'],
-            'period' => \app\includes\TPPlugin::$options['widgets'][$widgets]['period']
+            'period' => \app\includes\TPPlugin::$options['widgets'][$widgets]['period'],
+            'currency' => \app\includes\TPPlugin::$options['local']['currency'], //TPCurrencyUtils::TP_CURRENCY_USD,
+            //'powered_by' => (isset(\app\includes\TPPlugin::$options['widgets'][$widgets]['powered_by']))? "true" : "false"
         );
+
         extract( wp_parse_args( $data, $defaults ), EXTR_SKIP );
 
         $width = (isset($responsive) && $responsive == 'true')? "" : "&width={$width}px&";
         $white_label = $this->view->getWhiteLabel($widgets);
+
+
+        if (!empty($powered_by)) {
+            $powered_by = '&powered_by='.$powered_by;
+        } else {
+            $powered_by = '';
+        }
         //$this->view->TypeCurrency()
-        $currency = '';
-        $currency = $this->view->getCurrency($widgets, $white_label);
+        //$currency = '';
+        //$currency = $this->view->getCurrency($widgets, $white_label);
         //error_log($period_day_from);
         //error_log($origin);
         //error_log($destination);
@@ -57,9 +69,12 @@ class TPCalendarWidgetController  extends \app\includes\controllers\site\TPWiget
             .$width.'&searchUrl='.$white_label.'&one_way='.$one_way
             .'&only_direct='.$direct.'&locale='.\app\includes\common\TPLang::getLang()
             .'&period='.$period
+            .$powered_by
             .'&range='.$period_day_from.'%2C'.$period_day_to.'"
              data-wpfc-render="false" async></script></div>';
+
         //error_log($output);
+
         return $output;
     }
 }
